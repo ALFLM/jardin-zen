@@ -1,0 +1,12 @@
+.zen-garden-canvas {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  cursor: crosshair;
+}
+
+.zen-garden-canvas canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
