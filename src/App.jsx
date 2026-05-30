@@ -26,10 +26,10 @@ function App() {
           <p>Una experiencia tranquila y meditativa.</p>
           <h3>Controles:</h3>
           <ul>
-            <li><strong>Ratón:</strong> Usa el rastrillo para hacer líneas en la arena</li>
-            <li><strong>Click:</strong> Coloca piedras</li>
-            <li><strong>Rueda del ratón:</strong> Zoom</li>
-            <li><strong>Click derecho + Arrastrar:</strong> Rota la vista</li>
+            <li><strong>Ratón (Arrastrar):</strong> Usa el rastrillo para hacer líneas en la arena</li>
+            <li><strong>Click derecho:</strong> Coloca piedras en el jardín</li>
+            <li><strong>Rueda del ratón:</strong> Zoom in/out</li>
+            <li><strong>Sonido:</strong> Botón verde inferior-izquierda para activar/desactivar</li>
           </ul>
         </div>
       )}

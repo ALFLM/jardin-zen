@@ -144,15 +144,24 @@ const ZenGardenCanvas = () => {
       mouseRef.current.x = ((event.clientX - rect.left) / rect.width) * 2 - 1
       mouseRef.current.y = -((event.clientY - rect.top) / rect.height) * 2 + 1
 
+      // Update rake position
+      raycasterRef.current.setFromCamera(mouseRef.current, camera)
+      const intersection = raycasterRef.current.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), 0))
+      if (intersection && rastrillo.current) {
+        rastrillo.current.position.copy(intersection)
+      }
+
       if (isDrawingRef.current) {
         drawRakeLine()
       }
     }
 
     const onMouseDown = (event) => {
-      if (event.button === 0) { // Left click
+      if (event.button === 0) { // Left click - draw
         isDrawingRef.current = true
         drawRakeLine()
+      } else if (event.button === 2) { // Right click - place rock
+        placeRock()
       }
     }
 
@@ -191,9 +200,35 @@ const ZenGardenCanvas = () => {
       }
     }
 
+    const placeRock = () => {
+      raycasterRef.current.setFromCamera(mouseRef.current, camera)
+      const intersection = raycasterRef.current.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), 0))
+      
+      if (intersection) {
+        // Crear piedra con forma y tamaño aleatorio
+        const rockSize = Math.random() * 0.4 + 0.2
+        const rockGeometry = new THREE.IcosahedronGeometry(rockSize, 3)
+        const rockMaterial = new THREE.MeshStandardMaterial({
+          color: new THREE.Color().setHSL(0, 0, Math.random() * 0.3 + 0.3),
+          roughness: 0.8,
+          metalness: 0,
+        })
+        const rock = new THREE.Mesh(rockGeometry, rockMaterial)
+        rock.position.copy(intersection)
+        rock.position.y = rockSize * 0.8
+        rock.rotation.x = Math.random() * Math.PI
+        rock.rotation.z = Math.random() * Math.PI
+        rock.castShadow = true
+        rock.receiveShadow = true
+        
+        rockGroupRef.current.add(rock)
+      }
+    }
+
     renderer.domElement.addEventListener('mousemove', onMouseMove)
     renderer.domElement.addEventListener('mousedown', onMouseDown)
     renderer.domElement.addEventListener('mouseup', onMouseUp)
+    renderer.domElement.addEventListener('contextmenu', (e) => e.preventDefault())
     renderer.domElement.addEventListener('wheel', onMouseWheel, false)
 
     // Animation loop
@@ -246,6 +281,7 @@ const ZenGardenCanvas = () => {
       renderer.domElement.removeEventListener('mousemove', onMouseMove)
       renderer.domElement.removeEventListener('mousedown', onMouseDown)
       renderer.domElement.removeEventListener('mouseup', onMouseUp)
+      renderer.domElement.removeEventListener('contextmenu', (e) => e.preventDefault())
       renderer.domElement.removeEventListener('wheel', onMouseWheel)
       containerRef.current?.removeChild(renderer.domElement)
     }
