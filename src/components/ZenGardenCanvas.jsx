@@ -76,6 +76,7 @@ const ZenGardenCanvas = () => {
     // ========== RASTRILLO (RAKE) ==========
     const rastrilloGroup = new THREE.Group()
     
+    // Handle (mango)
     const handleGeometry = new THREE.CylinderGeometry(0.05, 0.05, 2, 16)
     const handleMaterial = new THREE.MeshStandardMaterial({
       color: 0x8b4513,
@@ -86,16 +87,33 @@ const ZenGardenCanvas = () => {
     handle.castShadow = true
     rastrilloGroup.add(handle)
 
-    const proneGeometry = new THREE.BoxGeometry(1.5, 0.1, 0.1)
-    const proneMaterial = new THREE.MeshStandardMaterial({
+    // Rake head (cabeza del rastrillo con 3 dientes)
+    const rakeHeadGeometry = new THREE.BoxGeometry(2, 0.1, 0.15)
+    const rakeHeadMaterial = new THREE.MeshStandardMaterial({
       color: 0xa0a0a0,
       roughness: 0.3,
     })
-    const prone = new THREE.Mesh(proneGeometry, proneMaterial)
-    prone.position.y = 2
-    prone.position.z = 0.3
-    prone.castShadow = true
-    rastrilloGroup.add(prone)
+    const rakeHead = new THREE.Mesh(rakeHeadGeometry, rakeHeadMaterial)
+    rakeHead.position.y = 2
+    rakeHead.position.z = 0.3
+    rakeHead.castShadow = true
+    rastrilloGroup.add(rakeHead)
+
+    // Create 3 teeth for visual effect
+    const toothGeometry = new THREE.ConeGeometry(0.08, 0.4, 8)
+    const toothMaterial = new THREE.MeshStandardMaterial({
+      color: 0x888888,
+      roughness: 0.4,
+    })
+
+    const toothPositions = [-0.8, 0, 0.8]
+    toothPositions.forEach((x) => {
+      const tooth = new THREE.Mesh(toothGeometry, toothMaterial)
+      tooth.position.set(x, 1.8, 0.5)
+      tooth.rotation.z = Math.PI
+      tooth.castShadow = true
+      rastrilloGroup.add(tooth)
+    })
 
     rastrilloGroup.position.set(0, 0.5, 0)
     scene.add(rastrilloGroup)
@@ -139,37 +157,60 @@ const ZenGardenCanvas = () => {
     butterflyRef.current = { group: butterflyGroup, wings: [leftWing, rightWing], time: 0 }
 
     // ========== INTERACTION FUNCTIONS ==========
+    const lastRakePosition = new THREE.Vector3(0, 0, 0)
+
     const drawRakeLine = () => {
       const now = Date.now()
       if (now - lastDrawTimeRef.current < DRAW_THROTTLE) return
       lastDrawTimeRef.current = now
 
-      raycasterRef.current.setFromCamera(mouseRef.current, camera)
-      const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0)
-      const intersection = new THREE.Vector3()
-      raycasterRef.current.ray.intersectPlane(plane, intersection)
+      if (rastrillo.current) {
+        // Get current rake position
+        const rakePos = rastrillo.current.position.clone()
 
-      if (intersection) {
-        // Clamp to garden bounds (40x40 sand = ±20)
-        const clampedX = Math.max(-20, Math.min(20, intersection.x))
-        const clampedZ = Math.max(-20, Math.min(20, intersection.z))
-
-        const lineGeometry = new THREE.BufferGeometry()
-        const points = []
+        // Calculate direction from last position to current (for trailing effect)
+        const direction = rakePos.clone().sub(lastRakePosition).normalize()
         
-        // Draw fewer, more controlled rake marks
-        for (let i = 0; i < 5; i++) {
+        // If direction is too small, skip (no movement)
+        if (direction.length() < 0.01) return
+
+        // Draw 3 parallel lines (one for each tooth)
+        const lineSpacing = 0.8
+        const lineLength = 1.5
+
+        for (let toothIndex = -1; toothIndex <= 1; toothIndex++) {
+          const lineGeometry = new THREE.BufferGeometry()
+          const points = []
+
+          // Offset perpendicular to rake direction
+          const perpendicular = new THREE.Vector3(-direction.z, 0, direction.x).normalize()
+          const offset = perpendicular.multiplyScalar(toothIndex * lineSpacing * 0.5)
+
+          // Start and end points of the line
+          const startPoint = rakePos.clone().add(offset).sub(direction.clone().multiplyScalar(lineLength * 0.5))
+          const endPoint = rakePos.clone().add(offset).add(direction.clone().multiplyScalar(lineLength * 0.5))
+
+          startPoint.y = 0.01
+          endPoint.y = 0.01
+
           points.push(
-            clampedX + (Math.random() - 0.5) * 0.3,
-            0.01,
-            clampedZ + (Math.random() - 0.5) * 0.3
+            startPoint.x, startPoint.y, startPoint.z,
+            endPoint.x, endPoint.y, endPoint.z
           )
+
+          lineGeometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(points), 3))
+          
+          // Gradient color from light to darker brown
+          const lineMaterial = new THREE.LineBasicMaterial({
+            color: new THREE.Color().setHSL(0.08, 0.3, 0.4),
+            linewidth: 3,
+          })
+          const line = new THREE.Line(lineGeometry, lineMaterial)
+          linesGroupRef.current.add(line)
         }
-        
-        lineGeometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(points), 3))
-        const lineMaterial = new THREE.LineBasicMaterial({ color: 0xa89968 })
-        const line = new THREE.Line(lineGeometry, lineMaterial)
-        linesGroupRef.current.add(line)
+
+        // Update last position
+        lastRakePosition.copy(rakePos)
       }
     }
 
