@@ -14,6 +14,9 @@ const ZenGardenCanvas = () => {
   const mouseRef = useRef(new THREE.Vector2())
   const controlsRef = useRef({ zoom: 20 })
   const rendererRef = useRef(null)
+  const rastrilloTargetRef = useRef(new THREE.Vector3(0, 0.5, 0))
+  const lastDrawTimeRef = useRef(0)
+  const DRAW_THROTTLE = 50 // ms - dibuja cada 50ms para no saturar
 
   useEffect(() => {
     if (!containerRef.current) return
@@ -137,20 +140,29 @@ const ZenGardenCanvas = () => {
 
     // ========== INTERACTION FUNCTIONS ==========
     const drawRakeLine = () => {
+      const now = Date.now()
+      if (now - lastDrawTimeRef.current < DRAW_THROTTLE) return
+      lastDrawTimeRef.current = now
+
       raycasterRef.current.setFromCamera(mouseRef.current, camera)
       const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0)
       const intersection = new THREE.Vector3()
       raycasterRef.current.ray.intersectPlane(plane, intersection)
 
       if (intersection) {
+        // Clamp to garden bounds (40x40 sand = ±20)
+        const clampedX = Math.max(-20, Math.min(20, intersection.x))
+        const clampedZ = Math.max(-20, Math.min(20, intersection.z))
+
         const lineGeometry = new THREE.BufferGeometry()
         const points = []
         
-        for (let i = 0; i < 8; i++) {
+        // Draw fewer, more controlled rake marks
+        for (let i = 0; i < 5; i++) {
           points.push(
-            intersection.x + (Math.random() - 0.5) * 0.4,
+            clampedX + (Math.random() - 0.5) * 0.3,
             0.01,
-            intersection.z + (Math.random() - 0.5) * 0.4
+            clampedZ + (Math.random() - 0.5) * 0.3
           )
         }
         
@@ -193,8 +205,10 @@ const ZenGardenCanvas = () => {
       const intersection = new THREE.Vector3()
       raycasterRef.current.ray.intersectPlane(plane, intersection)
 
-      if (intersection && rastrillo.current) {
-        rastrillo.current.position.copy(intersection)
+      if (intersection) {
+        // Clamp target to garden bounds (40x40 sand = ±20)
+        rastrilloTargetRef.current.x = Math.max(-20, Math.min(20, intersection.x))
+        rastrilloTargetRef.current.z = Math.max(-20, Math.min(20, intersection.z))
       }
     }
 
@@ -258,6 +272,11 @@ const ZenGardenCanvas = () => {
         butterflyRef.current.wings.forEach((wing) => {
           wing.rotation.z = Math.sin(time * 10) * 0.5
         })
+      }
+
+      // Update rake position smoothly (with delay/lag)
+      if (rastrillo.current) {
+        rastrillo.current.position.lerp(rastrilloTargetRef.current, 0.15)
       }
 
       // Update camera
