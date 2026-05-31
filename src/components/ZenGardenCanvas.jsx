@@ -2,13 +2,22 @@ import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
 import './ZenGardenCanvas.css'
 
-const ZenGardenCanvas = () => {
+const ZenGardenCanvas = ({ onCharacterDialog = null, currentDialog = null }) => {
   const containerRef = useRef(null)
   const rastrillo = useRef(null)
   const cameraRef = useRef(null)
   const rockGroupRef = useRef(new THREE.Group())
   const linesGroupRef = useRef(new THREE.Group())
   const butterflyRef = useRef(null)
+  const characterRef = useRef(null)
+  const characterStateRef = useRef({
+    targetPos: new THREE.Vector3(0, 0, 0),
+    currentDialog: null,
+    dialogTime: 0,
+    nextDialogTime: Math.random() * 10 + 10, // 10-20 segundos
+    walkDirection: new THREE.Vector3(1, 0, 0),
+    directionChangeTimer: 0,
+  })
   const isDrawingRef = useRef(false)
   const raycasterRef = useRef(new THREE.Raycaster())
   const mouseRef = useRef(new THREE.Vector2())
@@ -156,6 +165,87 @@ const ZenGardenCanvas = () => {
     scene.add(butterflyGroup)
     butterflyRef.current = { group: butterflyGroup, wings: [leftWing, rightWing], time: 0 }
 
+    // ========== CHARACTER (JARDINERO / GARDENER) ==========
+    const characterGroup = new THREE.Group()
+
+    // Head (cabeza redonda gris)
+    const charHeadGeometry = new THREE.SphereGeometry(0.4, 16, 16)
+    const charHeadMaterial = new THREE.MeshStandardMaterial({
+      color: 0x888888,
+      roughness: 0.6,
+    })
+    const charHead = new THREE.Mesh(charHeadGeometry, charHeadMaterial)
+    charHead.position.y = 1.2
+    charHead.castShadow = true
+    characterGroup.add(charHead)
+
+    // Eyes (dos pequeños ojos negros)
+    const charEyeGeometry = new THREE.SphereGeometry(0.1, 8, 8)
+    const charEyeMaterial = new THREE.MeshStandardMaterial({ color: 0x000000 })
+    const charLeftEye = new THREE.Mesh(charEyeGeometry, charEyeMaterial)
+    charLeftEye.position.set(-0.15, 1.4, 0.35)
+    characterGroup.add(charLeftEye)
+    const charRightEye = new THREE.Mesh(charEyeGeometry, charEyeMaterial)
+    charRightEye.position.set(0.15, 1.4, 0.35)
+    characterGroup.add(charRightEye)
+
+    // Body (cuerpo cilíndrico gris oscuro)
+    const charBodyGeometry = new THREE.CylinderGeometry(0.25, 0.25, 0.6, 16)
+    const charBodyMaterial = new THREE.MeshStandardMaterial({
+      color: 0x707070,
+      roughness: 0.6,
+    })
+    const charBody = new THREE.Mesh(charBodyGeometry, charBodyMaterial)
+    charBody.position.y = 0.5
+    charBody.castShadow = true
+    characterGroup.add(charBody)
+
+    // Arms (dos brazos)
+    const charArmGeometry = new THREE.CylinderGeometry(0.1, 0.08, 0.5, 8)
+    const charArmMaterial = new THREE.MeshStandardMaterial({
+      color: 0x888888,
+      roughness: 0.6,
+    })
+    
+    const charLeftArm = new THREE.Mesh(charArmGeometry, charArmMaterial)
+    charLeftArm.position.set(-0.35, 0.8, 0)
+    charLeftArm.rotation.z = 0.3
+    charLeftArm.castShadow = true
+    characterGroup.add(charLeftArm)
+
+    const charRightArm = new THREE.Mesh(charArmGeometry, charArmMaterial)
+    charRightArm.position.set(0.35, 0.8, 0)
+    charRightArm.rotation.z = -0.3
+    charRightArm.castShadow = true
+    characterGroup.add(charRightArm)
+
+    // Legs (dos piernas pequeñas)
+    const charLegGeometry = new THREE.CylinderGeometry(0.1, 0.08, 0.4, 8)
+    const charLegMaterial = new THREE.MeshStandardMaterial({
+      color: 0x606060,
+      roughness: 0.6,
+    })
+
+    const charLeftLeg = new THREE.Mesh(charLegGeometry, charLegMaterial)
+    charLeftLeg.position.set(-0.15, 0.1, 0)
+    charLeftLeg.castShadow = true
+    characterGroup.add(charLeftLeg)
+
+    const charRightLeg = new THREE.Mesh(charLegGeometry, charLegMaterial)
+    charRightLeg.position.set(0.15, 0.1, 0)
+    charRightLeg.castShadow = true
+    characterGroup.add(charRightLeg)
+
+    characterGroup.position.set(-10, 0, -10)
+    scene.add(characterGroup)
+    characterRef.current = { 
+      group: characterGroup, 
+      arms: [charLeftArm, charRightArm],
+      legs: [charLeftLeg, charRightLeg],
+      head: charHead,
+      time: 0 
+    }
+
     // ========== INTERACTION FUNCTIONS ==========
     const lastRakePosition = new THREE.Vector3(0, 0, 0)
 
@@ -302,6 +392,53 @@ const ZenGardenCanvas = () => {
     const animate = () => {
       requestAnimationFrame(animate)
 
+      // Update character (jardinero)
+      if (characterRef.current) {
+        const charState = characterStateRef.current
+        charState.time += 0.016 // ~60fps
+
+        // Change direction every 5-10 seconds
+        charState.directionChangeTimer += 0.016
+        if (charState.directionChangeTimer > Math.random() * 5 + 5) {
+          const angle = Math.random() * Math.PI * 2
+          charState.walkDirection.set(Math.cos(angle), 0, Math.sin(angle))
+          charState.directionChangeTimer = 0
+        }
+
+        // Move character slowly across garden
+        const speed = 1.5 // units per second
+        const movement = charState.walkDirection.clone().multiplyScalar(speed * 0.016)
+        characterRef.current.group.position.add(movement)
+
+        // Keep character within bounds
+        const maxBound = 18
+        characterRef.current.group.position.x = Math.max(-maxBound, Math.min(maxBound, characterRef.current.group.position.x))
+        characterRef.current.group.position.z = Math.max(-maxBound, Math.min(maxBound, characterRef.current.group.position.z))
+
+        // Animate arms swinging while walking
+        const armSwing = Math.sin(charState.time * 5) * 0.3
+        characterRef.current.arms[0].rotation.z = 0.3 + armSwing
+        characterRef.current.arms[1].rotation.z = -0.3 - armSwing
+
+        // Animate legs walking motion
+        const legSwing = Math.sin(charState.time * 5) * 0.2
+        characterRef.current.legs[0].rotation.z = legSwing * 0.5
+        characterRef.current.legs[1].rotation.z = -legSwing * 0.5
+
+        // Head looks in walking direction
+        characterRef.current.head.rotation.y = Math.atan2(charState.walkDirection.x, charState.walkDirection.z)
+
+        // Dialog system - show dialog every 10-20 seconds
+        charState.dialogTime += 0.016
+        if (charState.dialogTime > charState.nextDialogTime) {
+          if (onCharacterDialog) {
+            onCharacterDialog()
+          }
+          charState.dialogTime = 0
+          charState.nextDialogTime = Math.random() * 10 + 10
+        }
+      }
+
       // Update butterfly
       if (butterflyRef.current) {
         butterflyRef.current.time += 0.02
@@ -356,7 +493,34 @@ const ZenGardenCanvas = () => {
     }
   }, [])
 
-  return <div ref={containerRef} className="zen-garden-canvas"></div>
+  return (
+    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+      <div ref={containerRef} className="zen-garden-canvas"></div>
+      {currentDialog && (
+        <div
+          style={{
+            position: 'absolute',
+            bottom: '20px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            color: '#d4c4a8',
+            padding: '15px 25px',
+            borderRadius: '8px',
+            maxWidth: '400px',
+            textAlign: 'center',
+            fontStyle: 'italic',
+            fontSize: '14px',
+            lineHeight: '1.5',
+            zIndex: 100,
+            animation: 'fadeInOut 3s ease-in-out',
+          }}
+        >
+          {currentDialog}
+        </div>
+      )}
+    </div>
+  )
 }
 
 export default ZenGardenCanvas
