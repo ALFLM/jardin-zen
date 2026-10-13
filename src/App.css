@@ -3,5 +3,41 @@
   height: 100%;
   position: relative;
   overflow: hidden;
-  background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+  background:
+    radial-gradient(circle at top, rgba(160, 121, 90, 0.24), transparent 28%),
+    radial-gradient(circle at bottom, rgba(125, 211, 252, 0.14), transparent 36%),
+    linear-gradient(135deg, #10181f 0%, #1b2432 42%, #2d3f54 100%);
+  box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.25);
+}
+
+.app-container::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255,255,255,0.05), transparent 25%, rgba(0,0,0,0.18));
+  pointer-events: none;
+}
+
+.close-button:hover {
+  background: rgba(79, 172, 254, 0.2);
+  border-color: rgba(125, 211, 252, 0.4);
+  color: #a5f3fc;
+}
+
+.close-button:active {
+  transform: scale(0.9);
+}
+
+.info-button,
+.close-button,
+.info-modal {
+  will-change: transform, opacity;
+}
+
+@media (max-width: 768px) {
+  .app-container {
+    background:
+      radial-gradient(circle at top, rgba(160, 121, 90, 0.22), transparent 20%),
+      linear-gradient(180deg, #10181f 0%, #1b2432 42%, #2d3f54 100%);
+  }
 }

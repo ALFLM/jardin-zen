@@ -15,7 +15,7 @@ const SoundControl = () => {
       const audioContext = new (window.AudioContext || window.webkitAudioContext)()
       audioContextRef.current = audioContext
 
-      // Create calm ambient melody
+      // Create calm ambient melody with filters
       const createMelodyNote = (frequency, startTime, duration) => {
         const osc = audioContext.createOscillator()
         const gain = audioContext.createGain()
@@ -25,15 +25,16 @@ const SoundControl = () => {
         osc.type = 'sine'
         osc.frequency.value = frequency
         
-        // Smooth envelope
+        // Smooth ADSR envelope
         gain.gain.setValueAtTime(0, startTime)
-        gain.gain.linearRampToValueAtTime(0.05, startTime + 0.3)
-        gain.gain.linearRampToValueAtTime(0.02, startTime + duration - 0.2)
+        gain.gain.linearRampToValueAtTime(0.04, startTime + 0.4)
+        gain.gain.linearRampToValueAtTime(0.03, startTime + duration - 0.3)
         gain.gain.linearRampToValueAtTime(0, startTime + duration)
         
-        // Low pass filter for softness
+        // Low pass filter for warmth and softness
         filter.type = 'lowpass'
-        filter.frequency.value = 1000
+        filter.frequency.value = 1200
+        filter.Q.value = 0.5
         
         osc.connect(gain)
         gain.connect(filter)
@@ -45,16 +46,16 @@ const SoundControl = () => {
         return osc
       }
 
-      // Melody sequence (calming, low frequencies)
+      // Extended pentatonic melody sequence (calming, meditative)
       const melodySequence = [
-        { freq: 55, duration: 2 },   // A1
-        { freq: 65.41, duration: 2 }, // C#2
-        { freq: 55, duration: 2 },    // A1
-        { freq: 73.42, duration: 2 }, // D#2
-        { freq: 55, duration: 2 },    // A1
-        { freq: 61.74, duration: 2 }, // B1
-        { freq: 55, duration: 2 },    // A1
-        { freq: 49, duration: 2 },    // G1
+        { freq: 55, duration: 2.5 },    // A1
+        { freq: 65.41, duration: 2.5 }, // C#2
+        { freq: 55, duration: 2.5 },    // A1
+        { freq: 73.42, duration: 2.5 }, // D#2
+        { freq: 55, duration: 2.5 },    // A1
+        { freq: 61.74, duration: 2 },   // B1
+        { freq: 55, duration: 3 },      // A1
+        { freq: 49, duration: 3 },      // G1
       ]
 
       let totalTime = 0
@@ -66,43 +67,81 @@ const SoundControl = () => {
           totalTime += note.duration
         })
 
-        // Repeat melody every ~16 seconds
+        // Repeat melody every ~18 seconds
         melodyTimeoutRef.current = setTimeout(playMelodySequence, totalTime * 1000)
       }
 
       playMelodySequence()
 
-      // Occasional gentle bong sounds
+      // Ambient pad - gentle background sustain
+      const createAmbientPad = () => {
+        const padOsc = audioContext.createOscillator()
+        const padGain = audioContext.createGain()
+        const padFilter = audioContext.createBiquadFilter()
+        
+        padOsc.type = 'sine'
+        padOsc.frequency.value = 41.2 // E1
+        
+        padGain.gain.setValueAtTime(0.01, audioContext.currentTime)
+        padGain.gain.linearRampToValueAtTime(0.015, audioContext.currentTime + 2)
+        
+        padFilter.type = 'lowpass'
+        padFilter.frequency.value = 400
+        padFilter.Q.value = 0.3
+        
+        padOsc.connect(padGain)
+        padGain.connect(padFilter)
+        padFilter.connect(audioContext.destination)
+        
+        padOsc.start(audioContext.currentTime)
+        return { osc: padOsc, gain: padGain }
+      }
+
+      const ambientPad = createAmbientPad()
+
+      // Occasional gentle bong sounds - Zen bell
       const playBong = () => {
         if (!isSoundOn || !audioContextRef.current) return
 
         const now = audioContext.currentTime
         const osc = audioContext.createOscillator()
         const gain = audioContext.createGain()
+        const filter = audioContext.createBiquadFilter()
 
         osc.type = 'sine'
-        osc.frequency.setValueAtTime(120, now)
-        osc.frequency.exponentialRampToValueAtTime(50, now + 2)
+        osc.frequency.setValueAtTime(140, now)
+        osc.frequency.exponentialRampToValueAtTime(60, now + 2.5)
 
-        gain.gain.setValueAtTime(0.1, now)
-        gain.gain.exponentialRampToValueAtTime(0.01, now + 2)
+        gain.gain.setValueAtTime(0.08, now)
+        gain.gain.exponentialRampToValueAtTime(0.005, now + 2.5)
+
+        filter.type = 'lowpass'
+        filter.frequency.value = 800
 
         osc.connect(gain)
-        gain.connect(audioContext.destination)
+        gain.connect(filter)
+        filter.connect(audioContext.destination)
 
         osc.start(now)
-        osc.stop(now + 2)
+        osc.stop(now + 2.5)
       }
 
-      // Schedule random bongs every 12-18 seconds
+      // Schedule random bongs every 15-25 seconds
       const scheduleBongs = () => {
         if (isSoundOn) {
           playBong()
-          setTimeout(scheduleBongs, Math.random() * 6000 + 12000)
+          setTimeout(scheduleBongs, Math.random() * 10000 + 15000)
         }
       }
 
       scheduleBongs()
+
+      // Store references for cleanup
+      return () => {
+        if (ambientPad) {
+          ambientPad.osc.stop(audioContext.currentTime + 1)
+        }
+      }
     }
 
     if (isSoundOn) {

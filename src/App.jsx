@@ -50,16 +50,16 @@ function App() {
         <div className="info-modal">
           <button className="close-button" onClick={() => setShowInfo(false)}>×</button>
           <h2>Jardín Zen</h2>
-          <p>Una experiencia tranquila y meditativa.</p>
+          <p>Una experiencia premium de relajación y meditación digital.</p>
           <h3>Controles:</h3>
           <ul>
-            <li><strong>Ratón (Arrastrar):</strong> Usa el rastrillo para hacer líneas en la arena</li>
-            <li><strong>Click derecho:</strong> Coloca piedras en el jardín</li>
-            <li><strong>Rueda del ratón:</strong> Zoom in/out</li>
-            <li><strong>Sonido:</strong> Botón verde inferior-izquierda para activar/desactivar</li>
+            <li><strong>Ratón (Arrastrar):</strong> Traza patrones en la arena con el rastrillo</li>
+            <li><strong>Click derecho:</strong> Coloca piedras meditativas en el jardín</li>
+            <li><strong>Rueda del ratón:</strong> Ajusta el zoom para cambiar perspectiva</li>
+            <li><strong>Sonido:</strong> Botón inferior-izquierda para música ambiental</li>
           </ul>
           <p style={{ marginTop: '15px', fontSize: '12px', opacity: 0.8 }}>
-            El jardinero te acompañará en tu meditación con sus reflexiones.
+            El jardinero acompaña tu viaje meditativo con reflexiones sabias. Tómate tu tiempo, respira profundo y disfruta del momento presente.
           </p>
         </div>
       )}
