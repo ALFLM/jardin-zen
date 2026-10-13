@@ -9,6 +9,7 @@ const ZenGardenCanvas = ({ onCharacterDialog = null, currentDialog = null }) => 
   const rockGroupRef = useRef(new THREE.Group())
   const linesGroupRef = useRef(new THREE.Group())
   const butterflyRef = useRef(null)
+  const gardenAnimalsRef = useRef(null)
   const characterRef = useRef(null)
   const characterStateRef = useRef({
     targetPos: new THREE.Vector3(0, 0, 0),
@@ -299,221 +300,262 @@ const ZenGardenCanvas = ({ onCharacterDialog = null, currentDialog = null }) => 
     // ========== LINES GROUP ==========
     scene.add(linesGroupRef.current)
 
-    // ========== BUTTERFLY - Artistic Design inspired by Alto & Monument Valley ==========
+    // ========== BUTTERFLY - Cute, simplified and friendly ==========
     const butterflyGroup = new THREE.Group()
-    
-    const bodyGeometry = new THREE.SphereGeometry(0.12, 16, 16)
+
+    const bodyGeometry = new THREE.SphereGeometry(0.12, 18, 18)
     const bodyMaterial = new THREE.MeshStandardMaterial({
-      color: 0xc9a882, // Warm earth tone
-      roughness: 0.5,
-      metalness: 0.2,
+      color: 0xf3c57a,
+      roughness: 0.55,
+      metalness: 0.1,
     })
     const body = new THREE.Mesh(bodyGeometry, bodyMaterial)
     body.castShadow = true
     body.receiveShadow = true
     butterflyGroup.add(body)
 
-    const wingGeometry = new THREE.BoxGeometry(0.35, 0.24, 0.02)
+    const wingGeometry = new THREE.SphereGeometry(0.24, 20, 20)
     const wingMaterial = new THREE.MeshStandardMaterial({
-      color: 0xd9b88a, // Soft peachy-tan
-      roughness: 0.35,
-      metalness: 0.3,
-      emissive: 0xc9915f,
-      emissiveIntensity: 0.15,
+      color: 0xf7d6a2,
+      roughness: 0.4,
+      metalness: 0.15,
+      emissive: 0xe8a56d,
+      emissiveIntensity: 0.12,
     })
 
     const leftWing = new THREE.Mesh(wingGeometry, wingMaterial)
-    leftWing.position.x = -0.18
+    leftWing.scale.set(1.6, 1.1, 0.3)
+    leftWing.position.x = -0.22
+    leftWing.position.y = 0.08
     leftWing.castShadow = true
     leftWing.receiveShadow = true
     butterflyGroup.add(leftWing)
 
     const rightWing = new THREE.Mesh(wingGeometry, wingMaterial)
-    rightWing.position.x = 0.18
+    rightWing.scale.set(1.6, 1.1, 0.3)
+    rightWing.position.x = 0.22
+    rightWing.position.y = 0.08
     rightWing.castShadow = true
     rightWing.receiveShadow = true
     butterflyGroup.add(rightWing)
 
     butterflyGroup.position.set(6, 4, 5)
     scene.add(butterflyGroup)
-    butterflyRef.current = { 
-      group: butterflyGroup, 
-      wings: [leftWing, rightWing], 
+    butterflyRef.current = {
+      group: butterflyGroup,
+      wings: [leftWing, rightWing],
       time: 0,
       floatSpeed: Math.random() * 0.3 + 0.2,
       floatOffset: Math.random() * Math.PI * 2
     }
 
-    // ========== CHARACTER (JARDINERO / GARDENER) - Friendly & Chubby ==========
+    // ========== SMALL FRIENDS - Cute birds and bug companions ==========
+    const birdGroup = new THREE.Group()
+    const birdBody = new THREE.SphereGeometry(0.18, 18, 18)
+    const birdMaterial = new THREE.MeshStandardMaterial({
+      color: 0xb7d8d9,
+      roughness: 0.5,
+      metalness: 0.08,
+    })
+    const birdBodyMesh = new THREE.Mesh(birdBody, birdMaterial)
+    birdBodyMesh.scale.set(1.4, 1, 1)
+    birdBodyMesh.castShadow = true
+    birdGroup.add(birdBodyMesh)
+
+    const birdWing = new THREE.SphereGeometry(0.12, 14, 14)
+    const birdWingMesh = new THREE.Mesh(birdWing, birdMaterial)
+    birdWingMesh.scale.set(1.4, 0.8, 0.3)
+    birdWingMesh.position.set(-0.12, 0.04, 0.1)
+    birdWingMesh.castShadow = true
+    birdGroup.add(birdWingMesh)
+
+    const birdBeak = new THREE.ConeGeometry(0.06, 0.2, 10)
+    const birdBeakMaterial = new THREE.MeshStandardMaterial({ color: 0xf5b878, roughness: 0.55 })
+    const birdBeakMesh = new THREE.Mesh(birdBeak, birdBeakMaterial)
+    birdBeakMesh.rotation.z = -Math.PI / 2
+    birdBeakMesh.position.set(0.2, 0.02, 0.08)
+    birdGroup.add(birdBeakMesh)
+
+    birdGroup.position.set(-7, 2.5, 4)
+    scene.add(birdGroup)
+
+    const ladybugGroup = new THREE.Group()
+    const ladybugCore = new THREE.SphereGeometry(0.18, 18, 18)
+    const ladybugMaterial = new THREE.MeshStandardMaterial({
+      color: 0xe56b5d,
+      roughness: 0.5,
+    })
+    const ladybugMesh = new THREE.Mesh(ladybugCore, ladybugMaterial)
+    ladybugMesh.scale.set(1.1, 0.9, 1.1)
+    ladybugMesh.castShadow = true
+    ladybugGroup.add(ladybugMesh)
+
+    const dotGeometry = new THREE.SphereGeometry(0.04, 10, 10)
+    const dotMaterial = new THREE.MeshStandardMaterial({ color: 0x2d2d2d, roughness: 0.6 })
+    const dotOffsets = [
+      [-0.08, 0.08, 0.12], [0.08, 0.08, 0.12], [0.0, -0.08, 0.12],
+      [-0.12, -0.02, 0.0], [0.12, -0.02, 0.0]
+    ]
+    dotOffsets.forEach(([x, y, z]) => {
+      const dot = new THREE.Mesh(dotGeometry, dotMaterial)
+      dot.position.set(x, y, z)
+      ladybugGroup.add(dot)
+    })
+
+    const ladybugHead = new THREE.SphereGeometry(0.08, 12, 12)
+    const ladybugHeadMesh = new THREE.Mesh(ladybugHead, ladybugMaterial)
+    ladybugHeadMesh.position.set(0, 0.12, 0.14)
+    ladybugGroup.add(ladybugHeadMesh)
+
+    const ladybugAntenna = new THREE.CylinderGeometry(0.01, 0.01, 0.12, 8)
+    const antennaMaterial = new THREE.MeshStandardMaterial({ color: 0x3c3b38, roughness: 0.7 })
+    const leftAntenna = new THREE.Mesh(ladybugAntenna, antennaMaterial)
+    leftAntenna.position.set(-0.04, 0.24, 0.13)
+    leftAntenna.rotation.z = 0.4
+    ladybugGroup.add(leftAntenna)
+    const rightAntenna = new THREE.Mesh(ladybugAntenna, antennaMaterial)
+    rightAntenna.position.set(0.04, 0.24, 0.13)
+    rightAntenna.rotation.z = -0.4
+    ladybugGroup.add(rightAntenna)
+
+    ladybugGroup.position.set(8, 0.8, 1.5)
+    scene.add(ladybugGroup)
+
+    gardenAnimalsRef.current = {
+      bird: birdGroup,
+      ladybug: ladybugGroup,
+      butterfly: butterflyGroup,
+      time: 0,
+    }
+
+    // ========== CHARACTER (JARDINERO / GARDENER) - Warm and cartoonish ==========
     const characterGroup = new THREE.Group()
 
-    // Head (cabeza grande y amigable - tono cálido)
-    const charHeadGeometry = new THREE.SphereGeometry(0.5, 20, 20)
+    // Head (big and friendly)
+    const charHeadGeometry = new THREE.SphereGeometry(0.52, 24, 24)
     const charHeadMaterial = new THREE.MeshStandardMaterial({
-      color: 0xa68968, // Warm sand-like tone
-      roughness: 0.5,
-      metalness: 0.1,
+      color: 0xe3c39b,
+      roughness: 0.6,
+      metalness: 0.08,
     })
     const charHead = new THREE.Mesh(charHeadGeometry, charHeadMaterial)
-    charHead.position.y = 1.4
+    charHead.position.y = 1.5
     charHead.castShadow = true
     charHead.receiveShadow = true
     characterGroup.add(charHead)
 
-    // Hat (sombrero simple de paja)
-    const hatBrimGeometry = new THREE.CylinderGeometry(0.6, 0.6, 0.08, 32)
+    // Hat with playful shape
     const hatMaterial = new THREE.MeshStandardMaterial({
-      color: 0xd4a574,
+      color: 0xd9b26b,
       roughness: 0.7,
     })
-    const hatBrim = new THREE.Mesh(hatBrimGeometry, hatMaterial)
-    hatBrim.position.y = 2.05
+    const hatBrim = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.62, 0.08, 32), hatMaterial)
+    hatBrim.position.y = 2.12
     hatBrim.castShadow = true
     characterGroup.add(hatBrim)
 
-    const hatTopGeometry = new THREE.ConeGeometry(0.45, 0.5, 32)
-    const hatTop = new THREE.Mesh(hatTopGeometry, hatMaterial)
-    hatTop.position.y = 2.35
+    const hatTop = new THREE.Mesh(new THREE.ConeGeometry(0.42, 0.52, 28), hatMaterial)
+    hatTop.position.y = 2.48
     hatTop.castShadow = true
     characterGroup.add(hatTop)
 
-    // Eyes - happy and kind
-    const charEyeGeometry = new THREE.SphereGeometry(0.1, 12, 12)
-    const charEyeMaterial = new THREE.MeshStandardMaterial({ 
-      color: 0x1a1a1a,
-      roughness: 0.3,
-    })
+    // Big eyes and smile
+    const charEyeGeometry = new THREE.SphereGeometry(0.09, 12, 12)
+    const charEyeMaterial = new THREE.MeshStandardMaterial({ color: 0x1f1a17, roughness: 0.3 })
     const charLeftEye = new THREE.Mesh(charEyeGeometry, charEyeMaterial)
-    charLeftEye.position.set(-0.18, 1.6, 0.42)
+    charLeftEye.position.set(-0.18, 1.62, 0.45)
     characterGroup.add(charLeftEye)
     const charRightEye = new THREE.Mesh(charEyeGeometry, charEyeMaterial)
-    charRightEye.position.set(0.18, 1.6, 0.42)
+    charRightEye.position.set(0.18, 1.62, 0.45)
     characterGroup.add(charRightEye)
 
-    // Smile (small line for smile)
-    const smileGeometry = new THREE.TorusGeometry(0.12, 0.03, 16, 100, 0, Math.PI)
-    const smileMaterial = new THREE.MeshStandardMaterial({
-      color: 0x4a4a4a,
-      roughness: 0.4,
-    })
-    const smile = new THREE.Mesh(smileGeometry, smileMaterial)
-    smile.position.set(0, 1.35, 0.48)
+    const smile = new THREE.Mesh(new THREE.TorusGeometry(0.14, 0.026, 12, 40, 0, Math.PI), new THREE.MeshStandardMaterial({ color: 0x5b4333, roughness: 0.5 }))
+    smile.position.set(0, 1.34, 0.49)
     smile.rotation.z = Math.PI
     characterGroup.add(smile)
 
-    // Body (cuerpo gordito - sphere for roundness)
-    const charBodyGeometry = new THREE.SphereGeometry(0.4, 20, 20)
+    const charBodyGeometry = new THREE.SphereGeometry(0.45, 22, 22)
     const charBodyMaterial = new THREE.MeshStandardMaterial({
-      color: 0x5a7a6b, // Warm greenish tone
-      roughness: 0.6,
+      color: 0x7ea38d,
+      roughness: 0.55,
       metalness: 0.05,
     })
     const charBody = new THREE.Mesh(charBodyGeometry, charBodyMaterial)
-    charBody.scale.set(1, 1.2, 0.9) // Make it slightly wider
-    charBody.position.y = 0.55
+    charBody.scale.set(1.1, 1.4, 0.9)
+    charBody.position.y = 0.7
     charBody.castShadow = true
     charBody.receiveShadow = true
     characterGroup.add(charBody)
 
-    // Arms (más gordos y cortos para verse amigable)
-    const charArmGeometry = new THREE.CylinderGeometry(0.15, 0.12, 0.5, 12)
+    const charArmGeometry = new THREE.CylinderGeometry(0.13, 0.11, 0.52, 10)
     const charArmMaterial = new THREE.MeshStandardMaterial({
-      color: 0xa68968,
+      color: 0xe1c398,
       roughness: 0.55,
-      metalness: 0.1,
     })
-    
+
     const charLeftArm = new THREE.Mesh(charArmGeometry, charArmMaterial)
-    charLeftArm.position.set(-0.5, 0.9, 0)
-    charLeftArm.rotation.z = 0.4
+    charLeftArm.position.set(-0.58, 0.95, 0)
+    charLeftArm.rotation.z = 0.38
     charLeftArm.castShadow = true
-    charLeftArm.receiveShadow = true
     characterGroup.add(charLeftArm)
 
     const charRightArm = new THREE.Mesh(charArmGeometry, charArmMaterial)
-    charRightArm.position.set(0.5, 0.9, 0)
-    charRightArm.rotation.z = -0.4
+    charRightArm.position.set(0.58, 0.95, 0)
+    charRightArm.rotation.z = -0.38
     charRightArm.castShadow = true
-    charRightArm.receiveShadow = true
     characterGroup.add(charRightArm)
 
-    // Legs (más cortos)
-    const charLegGeometry = new THREE.CylinderGeometry(0.12, 0.1, 0.35, 12)
+    const charLegGeometry = new THREE.CylinderGeometry(0.12, 0.1, 0.38, 10)
     const charLegMaterial = new THREE.MeshStandardMaterial({
-      color: 0x4a5a4b,
+      color: 0x4e6654,
       roughness: 0.6,
-      metalness: 0.05,
     })
 
     const charLeftLeg = new THREE.Mesh(charLegGeometry, charLegMaterial)
-    charLeftLeg.position.set(-0.18, 0.1, 0)
+    charLeftLeg.position.set(-0.18, 0.12, 0)
     charLeftLeg.castShadow = true
-    charLeftLeg.receiveShadow = true
     characterGroup.add(charLeftLeg)
 
     const charRightLeg = new THREE.Mesh(charLegGeometry, charLegMaterial)
-    charRightLeg.position.set(0.18, 0.1, 0)
+    charRightLeg.position.set(0.18, 0.12, 0)
     charRightLeg.castShadow = true
-    charRightLeg.receiveShadow = true
     characterGroup.add(charRightLeg)
 
-    // RAKE TOOL IN HAND - Character will hold and use the rake
     const charRakeGroup = new THREE.Group()
-    
-    // Rake handle
-    const charRakeHandleGeometry = new THREE.CylinderGeometry(0.04, 0.04, 1.5, 16)
-    const charRakeMaterial = new THREE.MeshStandardMaterial({
-      color: 0x8b6f47,
-      roughness: 0.5,
-    })
-    const charRakeHandle = new THREE.Mesh(charRakeHandleGeometry, charRakeMaterial)
+    const charRakeHandle = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.5, 16), new THREE.MeshStandardMaterial({ color: 0x8b6f47, roughness: 0.5 }))
     charRakeHandle.position.y = 0.3
     charRakeHandle.castShadow = true
     charRakeGroup.add(charRakeHandle)
 
-    // Rake head
-    const charRakeHeadGeometry = new THREE.BoxGeometry(1.2, 0.08, 0.15)
-    const charRakeHeadMaterial = new THREE.MeshStandardMaterial({
-      color: 0xb0b0b0,
-      roughness: 0.35,
-      metalness: 0.6,
-    })
-    const charRakeHead = new THREE.Mesh(charRakeHeadGeometry, charRakeHeadMaterial)
+    const charRakeHead = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.08, 0.15), new THREE.MeshStandardMaterial({ color: 0xb9b4b1, roughness: 0.35, metalness: 0.45 }))
     charRakeHead.position.y = 1.3
     charRakeHead.position.z = 0.2
     charRakeHead.castShadow = true
     charRakeGroup.add(charRakeHead)
 
-    // Rake teeth
-    const rakeToothGeometry = new THREE.ConeGeometry(0.06, 0.35, 8)
-    const rakeToothMaterial = new THREE.MeshStandardMaterial({
-      color: 0xa0a0a0,
-      roughness: 0.3,
-      metalness: 0.65,
-    })
-    const charRakeToothPositions = [-0.6, -0.2, 0.2, 0.6]
-    charRakeToothPositions.forEach((x) => {
-      const tooth = new THREE.Mesh(rakeToothGeometry, rakeToothMaterial)
-      tooth.position.set(x, 1.05, 0.35)
+    const charRakeToothGeometry = new THREE.ConeGeometry(0.06, 0.35, 8)
+    const charRakeToothMaterial = new THREE.MeshStandardMaterial({ color: 0xa4a2a0, roughness: 0.35, metalness: 0.4 })
+    [-0.6, -0.2, 0.2, 0.6].forEach((x) => {
+      const tooth = new THREE.Mesh(charRakeToothGeometry, charRakeToothMaterial)
+      tooth.position.set(x, 1.08, 0.35)
       tooth.rotation.z = Math.PI
       tooth.castShadow = true
       charRakeGroup.add(tooth)
     })
 
-    // Position rake in right hand
-    charRakeGroup.position.set(0.35, 0.9, 0.2)
-    charRakeGroup.rotation.z = -0.3
+    charRakeGroup.position.set(0.42, 0.95, 0.2)
+    charRakeGroup.rotation.z = -0.32
     characterGroup.add(charRakeGroup)
 
     characterGroup.position.set(-11, 0, -11)
     scene.add(characterGroup)
-    characterRef.current = { 
-      group: characterGroup, 
+    characterRef.current = {
+      group: characterGroup,
       arms: [charLeftArm, charRightArm],
       legs: [charLeftLeg, charRightLeg],
       head: charHead,
       rakeGroup: charRakeGroup,
-      time: 0 
+      time: 0
     }
 
     // ========== INTERACTION FUNCTIONS ==========
@@ -828,26 +870,35 @@ const ZenGardenCanvas = ({ onCharacterDialog = null, currentDialog = null }) => 
         }
       }
 
-      // Update butterfly with floating animation
-      if (butterflyRef.current) {
-        butterflyRef.current.time += 0.016
-        const time = butterflyRef.current.time + butterflyRef.current.floatOffset
-        
-        // Smooth figure-8 flight pattern
-        butterflyRef.current.group.position.x = 6 + Math.sin(time * 0.4) * 4
-        butterflyRef.current.group.position.y = 4.5 + Math.sin(time * 0.25) * 1.2
-        butterflyRef.current.group.position.z = 6 + Math.cos(time * 0.3) * 3.5
+      // Update butterfly and garden animals with friendly movements
+      if (gardenAnimalsRef.current) {
+        gardenAnimalsRef.current.time += 0.016
+        const time = gardenAnimalsRef.current.time
 
-        // Smooth wing flapping
-        const wingFlap = Math.sin(time * 8) * 0.6
-        butterflyRef.current.wings[0].rotation.z = wingFlap
-        butterflyRef.current.wings[1].rotation.z = -wingFlap
-        
-        // Body rotation follows direction
-        butterflyRef.current.group.rotation.y = Math.atan2(
-          Math.sin(time * 0.3),
-          Math.cos(time * 0.4)
-        )
+        if (butterflyRef.current) {
+          butterflyRef.current.time += 0.016
+          const butterflyTime = butterflyRef.current.time + butterflyRef.current.floatOffset
+
+          butterflyRef.current.group.position.x = 6 + Math.sin(butterflyTime * 0.4) * 4
+          butterflyRef.current.group.position.y = 4.5 + Math.sin(butterflyTime * 0.25) * 1.2
+          butterflyRef.current.group.position.z = 6 + Math.cos(butterflyTime * 0.3) * 3.5
+
+          const wingFlap = Math.sin(butterflyTime * 8) * 0.6
+          butterflyRef.current.wings[0].rotation.z = wingFlap
+          butterflyRef.current.wings[1].rotation.z = -wingFlap
+          butterflyRef.current.group.rotation.y = Math.atan2(Math.sin(butterflyTime * 0.3), Math.cos(butterflyTime * 0.4))
+        }
+
+        const birdBob = Math.sin(time * 1.6) * 0.25
+        gardenAnimalsRef.current.bird.position.y = 2.5 + birdBob
+        gardenAnimalsRef.current.bird.position.x = -7 + Math.sin(time * 0.7) * 2.5
+        gardenAnimalsRef.current.bird.position.z = 4 + Math.cos(time * 0.8) * 1.5
+        gardenAnimalsRef.current.bird.rotation.y = Math.sin(time * 0.7) * 0.7
+
+        const ladybugWobble = Math.sin(time * 2.5) * 0.3
+        gardenAnimalsRef.current.ladybug.position.y = 0.8 + ladybugWobble
+        gardenAnimalsRef.current.ladybug.position.x = 8 + Math.sin(time * 1.2) * 1.6
+        gardenAnimalsRef.current.ladybug.rotation.y = Math.sin(time * 1.1) * 0.8
       }
 
       // Update rake position smoothly (with delay/lag)
